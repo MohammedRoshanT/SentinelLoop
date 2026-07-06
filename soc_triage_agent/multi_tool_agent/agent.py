@@ -15,7 +15,7 @@ from google.genai.types import HttpRetryOptions
 
 # Define model with exponential backoff retry to mitigate 429 rate limit errors
 gemini_model = Gemini(
-    model="gemini-2.0-flash",
+    model="gemini-3.5-flash",
     retry_options=HttpRetryOptions(
         attempts=6,
         initial_delay=2.0,
