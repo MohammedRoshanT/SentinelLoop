@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  vexscan:
+    build: ./vexscan
+    ports:
+      - "8003:8003"
+    environment:
+      - VT_API_KEY=${VT_API_KEY}
+      - SHODAN_API_KEY=${SHODAN_API_KEY}
+      - ABUSEIPDB_API_KEY=${ABUSEIPDB_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    networks:
+      - sentinel_net
+
+  phexor:
+    build: ./phexor
+    ports:
+      - "8001:8001"
+    environment:
+      - URLSCAN_API_KEY=${URLSCAN_API_KEY}
+      - VT_API_KEY=${VT_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    networks:
+      - sentinel_net
+
+  soc_agent:
+    build: ./soc_triage_agent
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - vexscan
+      - phexor
+    networks:
+      - sentinel_net
+
+networks:
+  sentinel_net:
+    driver: bridge
