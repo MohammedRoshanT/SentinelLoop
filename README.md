@@ -13,6 +13,12 @@ This repository is structured as a monorepo containing three core components.
 
 ---
 
+## 🚀 Built with Antigravity
+
+This project was developed with the assistance of **Antigravity**, Google's advanced agentic coding AI. Antigravity acted as a pair-programmer to help design the multi-agent orchestration, configure the MCP tools, and debug cross-service communication. By leveraging Antigravity's capabilities, SentinelLoop demonstrates the power of combining human domain expertise in cybersecurity with AI-driven development.
+
+---
+
 ## Setup Instructions
 
 ### 1. Prerequisites

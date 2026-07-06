@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelLoop | Automated SOC Pipeline</title>
+    <style>
+        :root {
+            --bg-color: #0f111a;
+            --panel-bg: #1a1d2d;
+            --primary-accent: #00e5ff;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --alert-critical: #ef4444;
+            --alert-high: #f97316;
+            --alert-medium: #eab308;
+            --alert-low: #3b82f6;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .header h1 {
+            color: var(--primary-accent);
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .panel {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .panel h2 {
+            margin-top: 0;
+            color: var(--primary-accent);
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 0.5rem;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .dot {
+            height: 12px;
+            width: 12px;
+            background-color: var(--alert-critical);
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot.online { background-color: #22c55e; }
+        .architecture {
+            grid-column: span 3;
+            text-align: center;
+        }
+        .flowchart {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .node {
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid var(--primary-accent);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .arrow {
+            color: var(--text-muted);
+            font-size: 1.5rem;
+        }
+        a.btn {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-accent);
+            color: var(--bg-color);
+            text-decoration: none;
+            font-weight: bold;
+            border-radius: 6px;
+            transition: opacity 0.2s;
+        }
+        a.btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SentinelLoop 🛡️</h1>
+        <p>Automated Multi-Agent SOC Triage Pipeline</p>
+    </div>
+
+    <div class="dashboard">
+        <div class="panel">
+            <h2>Pipeline Interface</h2>
+            <p>Access the primary ADK Agent chat interface to submit security indicators for triage.</p>
+            <a href="http://localhost:8000" target="_blank" class="btn">Open ADK Chat UI</a>
+        </div>
+        <div class="panel">
+            <h2>VexScan Subsystem</h2>
+            <div class="status-indicator"><span class="dot online"></span> API Active (Port 8003)</div>
+            <p>OSINT aggregation engine across VirusTotal, AbuseIPDB, and Shodan.</p>
+            <a href="http://localhost:8003/dashboard" target="_blank" class="btn">View VexScan</a>
+        </div>
+        <div class="panel">
+            <h2>Phexor Subsystem</h2>
+            <div class="status-indicator"><span class="dot online"></span> API Active (Port 8001)</div>
+            <p>Phishing forensics engine analyzing headers, URLs, and SPF/DKIM.</p>
+            <a href="http://localhost:8001" target="_blank" class="btn">View Phexor</a>
+        </div>
+        
+        <div class="panel architecture">
+            <h2>Multi-Agent Architecture Flow</h2>
+            <div class="flowchart">
+                <div class="node">Validator Agent<br><small>(Pre-Triage)</small></div>
+                <div class="arrow">➔</div>
+                <div class="node">Recon Agent<br><small>(OSINT)</small></div>
+                <div class="arrow">➔</div>
+                <div class="node">Analysis Agent<br><small>(Forensics)</small></div>
+                <div class="arrow">➔</div>
+                <div class="node">Report Agent<br><small>(Triage Output)</small></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
