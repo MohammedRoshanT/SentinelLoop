@@ -10,6 +10,20 @@ from google.adk.tools.mcp_tool.mcp_toolset import StdioConnectionParams
 # Load environment variables
 load_dotenv()
 
+from google.adk.models import Gemini
+from google.genai.types import HttpRetryOptions
+
+# Define model with exponential backoff retry to mitigate 429 rate limit errors
+gemini_model = Gemini(
+    model="gemini-2.0-flash",
+    retry_options=HttpRetryOptions(
+        attempts=6,
+        initial_delay=2.0,
+        max_delay=60.0,
+        http_status_codes=[408, 429, 500, 502, 503, 504]
+    )
+)
+
 # Dynamically resolve python interpreter path and mcp_server.py path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 mcp_server_path = os.path.join(os.path.dirname(current_dir), "mcp_server.py")
@@ -47,7 +61,7 @@ mcp_toolset = McpToolset(
 # 1. validator_agent: Pre-triage classifier to validate inputs before deep investigation
 validator_agent = LlmAgent(
     name="validator_agent",
-    model="gemini-2.0-flash",
+    model=gemini_model,
     instruction="""You are a pre-triage security validator. Your job is to review the security indicator provided in the user's request.
 Determine if the indicator is an IP, domain, hash, or email address.
 Check if the indicator is a known safe or private address (e.g., 8.8.8.8, RFC1918 internal IPs).
@@ -60,7 +74,7 @@ Output your classification and priority level clearly. If the indicator is safe/
 # 2. recon_agent: investigates a security indicator (IP, domain, hash, email)
 recon_agent = LlmAgent(
     name="recon_agent",
-    model="gemini-2.0-flash",
+    model=gemini_model,
     instruction=f"""You are a security reconnaissance agent. Your job is to investigate a security indicator (such as an IP address, domain, file hash, or email address) provided in the user's request.
 You have access to the `osint_lookup` tool to query VirusTotal, AbuseIPDB, and Shodan details. Use it to get the raw intelligence for the indicator.
 Analyze the indicator and summarize your findings.
@@ -76,7 +90,7 @@ Verify all findings according to the following project rule:
 # 2. analysis_agent: runs forensic analysis if the alert involves an artifact
 analysis_agent = LlmAgent(
     name="analysis_agent",
-    model="gemini-2.0-flash",
+    model=gemini_model,
     instruction=f"""You are a forensic analysis agent. Your job is to review the security indicator and the reconnaissance findings:
 Reconnaissance Results: {{recon_results?}}
 
@@ -95,7 +109,7 @@ Verify all findings according to the following project rule:
 # 4. report_agent: writes a structured SOC triage report from what the first two found
 report_agent = LlmAgent(
     name="report_agent",
-    model="gemini-2.0-flash",
+    model=gemini_model,
     instruction=f"""You are a SOC reporting agent. Your job is to write a structured SOC triage report based on the findings from the previous steps.
 Validation Results: {{validation_results?}}
 Reconnaissance Results: {{recon_results?}}
