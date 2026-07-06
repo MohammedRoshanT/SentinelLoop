@@ -120,5 +120,26 @@ def scan_auto(request: ScanRequest):
         return scan_domain(request)
     return scan_hash(request)
 
+class BatchScanRequest(BaseModel):
+    targets: list[str]
+
+@app.post("/scan/batch")
+def scan_batch(request: BatchScanRequest):
+    results = []
+    # Limit to 10 to prevent overwhelming APIs
+    for target in request.targets[:10]:
+        target = target.strip()
+        target_type = detect_type(target)
+        try:
+            if target_type == "ip":
+                results.append(scan_ip(ScanRequest(target=target)))
+            elif target_type == "domain":
+                results.append(scan_domain(ScanRequest(target=target)))
+            else:
+                results.append(scan_hash(ScanRequest(target=target)))
+        except Exception as e:
+            results.append({"target": target, "error": str(e)})
+    return {"batch_results": results}
+
 # Mount asset folder just in case you expand it later
 app.mount("/static", StaticFiles(directory="dashboard"), name="static")

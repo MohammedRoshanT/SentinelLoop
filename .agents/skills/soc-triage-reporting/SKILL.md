@@ -10,18 +10,20 @@ description: Document formatting guidelines, severity criteria, and analyst tick
 All reports must be formatted in clean markdown, containing exactly the following sections in order:
 
 1. **Alert Summary**: A concise summary of the alert being triaged.
-2. **OSINT Findings**: The intelligence gathered from VirusTotal, AbuseIPDB, Shodan, etc.
-3. **Forensic Findings**: The results of email header analysis, URL scans, and file/payload analysis.
-4. **Severity**: The assigned severity level (Critical, High, Medium, Low) based on the criteria below.
-5. **Recommended Action**: Clear and actionable next steps.
+2. **Initial Priority**: The initial priority assigned by the pre-triage validator (P1-P4).
+3. **OSINT Findings**: The intelligence gathered from VirusTotal, AbuseIPDB, Shodan, etc.
+4. **Forensic Findings**: The results of email header analysis, URL scans, and file/payload analysis.
+5. **Severity**: The assigned severity level (Critical, High, Medium, Low) based on the criteria below.
+6. **Recommended Action**: Clear and actionable next steps.
+7. **MITRE ATT&CK Mapping**: Identify relevant tactics and techniques based on the findings.
 
-## Severity Criteria
+## Severity & Priority Criteria
 
 Assigned severity must follow these definitions:
-- **Critical**: Confirmed malicious activity with active impact (e.g., confirmed phishing with clicked links, active C2 communication, known malware execution on a host).
-- **High**: Suspicious activity with high likelihood of threat (e.g., spoofed email headers failing SPF/DKIM/DMARC with suspicious links, binary hash flagged by multiple VT engines, known bad IP from AbuseIPDB with >50% confidence).
-- **Medium**: Activity requiring investigation but with no active malicious indicators (e.g., open ports on internal hosts, suspicious subject keywords but valid email authentication headers).
-- **Low**: Legitimate activity or low-risk alerts (e.g., standard DNS servers like 8.8.8.8, false positives, clean reputation across all sources).
+- **Critical (P1)**: Confirmed malicious activity with active impact (e.g., confirmed phishing with clicked links, active C2 communication, known malware execution on a host).
+- **High (P2)**: Suspicious activity with high likelihood of threat (e.g., spoofed email headers failing SPF/DKIM/DMARC with suspicious links, binary hash flagged by multiple VT engines, known bad IP from AbuseIPDB with >50% confidence).
+- **Medium (P3)**: Activity requiring investigation but with no active malicious indicators (e.g., open ports on internal hosts, suspicious subject keywords but valid email authentication headers).
+- **Low (P4)**: Legitimate activity or low-risk alerts (e.g., standard DNS servers like 8.8.8.8, false positives, clean reputation across all sources).
 
 ## Tone and Style
 
