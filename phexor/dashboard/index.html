@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phexor // Phishing Analysis</title>
+    <style>
+        :root {
+            --glass-bg: rgba(15, 20, 30, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glow-blue: #00f2fe;
+            --glow-purple: #4facfe;
+            --text-primary: #f5f7fa;
+            --text-secondary: #a0aec0;
+            --accent-red: #ff4757;
+            --accent-green: #2ed573;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, rgba(90, 18, 140, 0.2) 0%, transparent 45%),
+                        radial-gradient(circle at 90% 80%, rgba(15, 120, 200, 0.15) 0%, transparent 50%),
+                        #050811;
+            color: var(--text-primary);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 3rem 1rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin: 0;
+            background: linear-gradient(135deg, var(--glow-blue), var(--glow-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Glassmorphic Dropzone Box */
+        .drop-zone {
+            background: var(--glass-bg);
+            border: 2px dashed var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--glow-blue);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.15), inset 0 0 15px rgba(0, 242, 254, 0.05);
+            background: rgba(15, 25, 40, 0.75);
+        }
+
+        .drop-zone input { display: none; }
+
+        .drop-zone-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            background: linear-gradient(135deg, var(--glow-blue), var(--glow-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .drop-zone p {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .drop-zone span {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 0.5rem;
+        }
+
+        /* Loading Screen */
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+            font-size: 1.1rem;
+            color: var(--glow-blue);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+
+        /* Layout Grid for Results */
+        .dashboard-grid {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 2.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1.2fr 0.8fr; }
+            .full-width { grid-column: span 2; }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .ai-panel {
+            border: 1px solid rgba(255, 0, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(255, 0, 255, 0.05);
+        }
+
+        .glass-panel h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-panel h2 {
+            color: #ff7ff5;
+            text-shadow: 0 0 10px rgba(255, 127, 245, 0.2);
+        }
+
+        /* Meta Rows */
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.95rem;
+        }
+        .meta-label { color: var(--text-secondary); }
+        .meta-value { color: var(--text-primary); text-align: right; word-break: break-all; max-width: 70%; }
+
+        /* Security Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .badge-pass { background: rgba(46, 213, 115, 0.15); color: var(--accent-green); }
+        .badge-fail { background: rgba(255, 71, 87, 0.15); color: var(--accent-red); }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            font-family: inherit;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>PHEXOR</h1>
+        <p>Advanced AI Forensic Phishing Investigation Engine</p>
+    </header>
+
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-zone-icon">⎋</div>
+        <p>Drag & Drop `.eml` Analysis Target</p>
+        <span>or click to browse filesystem</span>
+        <input type="file" id="fileInput" accept=".eml" onchange="handleFileSelect(event)">
+    </div>
+
+    <div class="loader" id="loader">Processing email vectors through security filters...</div>
+
+    <div class="dashboard-grid" id="dashboardGrid">
+        
+        <!-- Left: AI Assessment Report -->
+        <div class="glass-panel ai-panel">
+            <h2>AI Analysis Verdict</h2>
+            <pre id="aiAnalysisBox"></pre>
+        </div>
+
+        <!-- Right: Header/Authentication Meta -->
+        <div class="glass-panel">
+            <h2>Authentication & Security</h2>
+            <div class="meta-row">
+                <div class="meta-label">From:</div>
+                <div class="meta-value" id="metaFrom">-</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">Sender IP:</div>
+                <div class="meta-value" id="metaIP">-</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">SPF:</div>
+                <div class="meta-value" id="metaSPF">-</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">DKIM:</div>
+                <div class="meta-value" id="metaDKIM">-</div>
+            </div>
+            <div class="meta-row">
+                <div class="meta-label">URLs Found:</div>
+                <div class="meta-value" id="metaUrls">-</div>
+            </div>
+        </div>
+
+        <!-- Full Width Bottom: Structural Parsing Logs -->
+        <div class="glass-panel full-width">
+            <h2>Extracted Extraction Matrix (Raw Json)</h2>
+            <pre id="rawJsonBox" style="font-family: monospace; font-size: 0.85rem; color: #7f8c8d;"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    
+    // Setup drag event behaviors
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); }, false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length) uploadEmlFile(files[0]);
+    });
+
+    function handleFileSelect(event) {
+        const files = event.target.files;
+        if (files.length) uploadEmlFile(files[0]);
+    }
+
+    async function uploadEmlFile(file) {
+        if (!file.name.endsWith('.eml')) {
+            alert('Please drop an .eml file structure.');
+            return;
+        }
+
+        const loader = document.getElementById('loader');
+        const grid = document.getElementById('dashboardGrid');
+
+        loader.style.display = 'block';
+        grid.style.display = 'none';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            });
+
+            const rawText = await response.text();
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch {
+                throw new Error(`Server execution crashed: ${rawText}`);
+            }
+
+            if (!response.ok) throw new Error(data.detail || 'Analysis failure');
+
+            // Render Results cleanly
+            document.getElementById('aiAnalysisBox').textContent = data.ai_analysis;
+            document.getElementById('metaFrom').textContent = data.parsed_email.sender;
+            document.getElementById('metaIP').textContent = data.parsed_email.sender_ip;
+            document.getElementById('metaUrls').textContent = data.parsed_email.urls.length;
+            
+            // Format security indicators nicely
+            const spf = data.parsed_email.spf.toLowerCase();
+            document.getElementById('metaSPF').innerHTML = spf.includes('fail') || spf.includes('none') 
+                ? `<span class="badge badge-fail">${data.parsed_email.spf}</span>`
+                : `<span class="badge badge-pass">${data.parsed_email.spf}</span>`;
+
+            const dkim = data.parsed_email.dkim.toLowerCase();
+            document.getElementById('metaDKIM').innerHTML = dkim.includes('missing') || dkim.includes('fail')
+                ? `<span class="badge badge-fail">${data.parsed_email.dkim}</span>`
+                : `<span class="badge badge-pass">${data.parsed_email.dkim}</span>`;
+
+            // Strip AI report text out of the logging block to save UI noise
+            const loggingDump = { ...data };
+            delete loggingDump.ai_analysis;
+            document.getElementById('rawJsonBox').textContent = JSON.stringify(loggingDump, null, 2);
+
+            grid.style.display = 'grid';
+
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

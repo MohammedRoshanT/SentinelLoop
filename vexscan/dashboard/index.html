@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VexScan Ops Dashboard</title>
+    <style>
+        :root {
+            --base-bg: #18191e;
+            --text-main: #e2e8f0;
+            --text-muted: #718096;
+            
+            /* Neumorphic Shadow Play */
+            --nm-outer-light: rgba(255, 255, 255, 0.04);
+            --nm-outer-dark: rgba(0, 0, 0, 0.4);
+            --nm-inset-light: rgba(255, 255, 255, 0.02);
+            --nm-inset-dark: rgba(0, 0, 0, 0.6);
+
+            /* Cyber Accents */
+            --neon-cyan: #00f2fe;
+            --neon-magenta: #f355ff;
+            --neon-green: #00ff87;
+            --neon-red: #ff4757;
+        }
+
+        body {
+            background-color: var(--base-bg);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 2.5rem 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin: 0 0 2rem 0;
+            text-transform: uppercase;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        header h1 span {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+        }
+
+        /* Neumorphic Search Extrusion */
+        .search-container {
+            display: flex;
+            gap: 15px;
+            padding: 12px;
+            border-radius: 16px;
+            background: var(--base-bg);
+            box-shadow: -6px -6px 12px var(--nm-outer-light), 
+                        6px 6px 12px var(--nm-outer-dark);
+            margin-bottom: 2.5rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 16px;
+            background: var(--base-bg);
+            border: none;
+            color: var(--text-main);
+            font-size: 1rem;
+            border-radius: 12px;
+            font-family: monospace;
+            box-shadow: inset -3px -3px 7px var(--nm-inset-light), 
+                        inset 3px 3px 7px var(--nm-inset-dark);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            box-shadow: inset -3px -3px 7px var(--nm-inset-light), 
+                        inset 3px 3px 7px var(--nm-inset-dark),
+                        0 0 8px rgba(0, 242, 254, 0.15);
+        }
+
+        /* Interactive Neumorphic Button */
+        button {
+            padding: 0 28px;
+            background: var(--base-bg);
+            border: none;
+            color: var(--neon-cyan);
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: -4px -4px 8px var(--nm-outer-light), 
+                        4px 4px 8px var(--nm-outer-dark);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            color: var(--text-main);
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), transparent);
+        }
+
+        button:active {
+            box-shadow: inset -3px -3px 7px var(--nm-inset-light), 
+                        inset 3px 3px 7px var(--nm-inset-dark);
+        }
+
+        .status-message {
+            display: none;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+            color: var(--neon-magenta);
+            font-family: monospace;
+        }
+
+        /* Results Display Grid */
+        .grid {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid { grid-template-columns: 1.3fr 0.7fr; }
+            .span-all { grid-column: span 2; }
+        }
+
+        /* Extruded Neumorphic Card */
+        .nm-card {
+            background: var(--base-bg);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: -6px -6px 14px var(--nm-outer-light), 
+                        6px 6px 14px var(--nm-outer-dark);
+        }
+
+        .nm-card h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ai-title h2 {
+            color: var(--neon-magenta);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        #rawIntelContent {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Dynamic Border Highlight for Errors */
+        .nm-card.error-card {
+            box-shadow: -6px -6px 14px var(--nm-outer-light), 
+                        6px 6px 14px var(--nm-outer-dark),
+                        inset 0 0 10px rgba(255, 71, 87, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>VexScan <span>// Core Intel</span></h1>
+    </header>
+    
+    <div class="search-container">
+        <input type="text" id="targetInput" placeholder="Enter target signature (IP, Domain, or Hash)..." autocomplete="off">
+        <button onclick="runScan()">EXECUTE</button>
+    </div>
+
+    <div class="status-message" id="statusBox">> Launching pipeline metrics...</div>
+
+    <div class="grid" id="resultsGrid">
+        <!-- AI Analytical Assessment -->
+        <div class="nm-card ai-title" id="aiCard">
+            <h2>AI Threat Assessment</h2>
+            <pre id="aiReportContent"></pre>
+        </div>
+
+        <!-- Metric Outputs/Target Profile Summary -->
+        <div class="nm-card">
+            <h2>Metadata & Feeds</h2>
+            <pre id="metaContent"></pre>
+        </div>
+
+        <!-- Raw Data Node Output -->
+        <div class="nm-card span-all">
+            <h2>Aggregated Telemetry (Raw)</h2>
+            <pre id="rawIntelContent"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function runScan() {
+        const target = document.getElementById('targetInput').value.trim();
+        if (!target) return;
+
+        const statusBox = document.getElementById('statusBox');
+        const grid = document.getElementById('resultsGrid');
+        const aiContent = document.getElementById('aiReportContent');
+        const rawContent = document.getElementById('rawIntelContent');
+        const metaContent = document.getElementById('metaContent');
+        const aiCard = document.getElementById('aiCard');
+
+        statusBox.style.display = 'block';
+        grid.style.display = 'none';
+        aiCard.classList.remove('error-card');
+
+        try {
+            const response = await fetch('/scan/auto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target: target })
+            });
+
+            const rawText = await response.text();
+            let data;
+            
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseError) {
+                throw new Error(`Pipeline returned broken dataset (Status ${response.status})`);
+            }
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Pipeline failure processing node.');
+            }
+
+            // Populate UI Elements
+            aiContent.textContent = data.ai_analysis;
+            
+            // Generate a clean properties breakdown for the Metadata box
+            metaContent.textContent = `Target: ${data.target}\nType: ${data.type.toUpperCase()}\nTimestamp: ${new Date().toLocaleTimeString()}`;
+
+            // Strip the markdown text output out of raw dump
+            const rawDump = { ...data };
+            delete rawDump.ai_analysis;
+            rawContent.textContent = JSON.stringify(rawDump, null, 2);
+
+            grid.style.display = 'grid';
+
+        } catch (error) {
+            aiCard.classList.add('error-card');
+            aiContent.textContent = `CRITICAL EXCEPTION:\n${error.message}`;
+            metaContent.textContent = "Metrics unavailable.";
+            rawContent.textContent = "No context node compiled.";
+            grid.style.display = 'grid';
+        } finally {
+            statusBox.style.display = 'none';
+        }
+    }
+
+    document.getElementById('targetInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') runScan();
+    });
+</script>
+
+</body>
+</html>

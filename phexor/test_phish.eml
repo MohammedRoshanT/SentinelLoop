@@ -1,0 +1,36 @@
+From: "PayPal Security" <security@paypa1-support.com>
+Reply-To: collect@harvester-domain.ru
+To: victim@gmail.com
+Subject: URGENT: Your account has been suspended - Verify immediately
+Date: Fri, 16 May 2026 10:23:11 +0000
+Message-ID: <abc123@paypa1-support.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Received-SPF: fail (domain of paypa1-support.com does not designate
+    192.168.1.1 as permitted sender)
+Authentication-Results: mx.google.com;
+    dkim=fail header.i=@paypa1-support.com;
+    dmarc=fail action=none header.from=paypa1-support.com
+Received: from mail.paypa1-support.com (192.168.1.1)
+    by mx.google.com with SMTP id abc123;
+    Fri, 16 May 2026 10:23:11 +0000
+Received: from 185.220.101.45 (unknown)
+    by mail.paypa1-support.com with SMTP;
+    Fri, 16 May 2026 10:23:09 +0000
+
+Dear Valued Customer,
+
+We have detected unusual activity on your PayPal account.
+Your account has been temporarily suspended.
+
+To restore access, please verify your identity immediately by clicking the link below:
+
+http://paypal-verify-account.suspicious-domain.xyz/login?ref=suspend123
+http://secure-paypal-update.tk/verify/account
+
+Failure to verify within 24 hours will result in permanent account closure.
+
+Regards,
+PayPal Security Team
+
+This email was sent from a notification-only address.
