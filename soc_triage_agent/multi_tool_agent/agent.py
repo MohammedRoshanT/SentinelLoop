@@ -2,7 +2,7 @@
 import os
 import sys
 from dotenv import load_dotenv
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents import LlmAgent, SequentialAgent, ParallelAgent
 from mcp import StdioServerParameters
 from google.adk.tools import McpToolset
 from google.adk.tools.mcp_tool.mcp_toolset import StdioConnectionParams
@@ -58,7 +58,10 @@ mcp_toolset = McpToolset(
     )
 )
 
-# 1. validator_agent: Pre-triage classifier to validate inputs before deep investigation
+# ─────────────────────────────────────────────────────────────
+# PHASE 0: Pre-triage Validation
+# validator_agent classifies the indicator before deep investigation
+# ─────────────────────────────────────────────────────────────
 validator_agent = LlmAgent(
     name="validator_agent",
     model=gemini_model,
@@ -71,7 +74,13 @@ Output your classification and priority level clearly. If the indicator is safe/
     output_key="validation_results"
 )
 
-# 2. recon_agent: investigates a security indicator (IP, domain, hash, email)
+# ─────────────────────────────────────────────────────────────
+# PHASE 1: Parallel Triage (Speed-Optimized)
+# recon_agent and analysis_agent run CONCURRENTLY via ParallelAgent
+# to slash execution overhead and maximize throughput.
+# ─────────────────────────────────────────────────────────────
+
+# recon_agent: Extracts indicators and invokes external threat intelligence feeds
 recon_agent = LlmAgent(
     name="recon_agent",
     model=gemini_model,
@@ -87,14 +96,13 @@ Verify all findings according to the following project rule:
     tools=[mcp_toolset]
 )
 
-# 2. analysis_agent: runs forensic analysis if the alert involves an artifact
+# analysis_agent: Detects and inspects local forensic files (e.g., raw .eml email artifacts)
 analysis_agent = LlmAgent(
     name="analysis_agent",
     model=gemini_model,
-    instruction=f"""You are a forensic analysis agent. Your job is to review the security indicator and the reconnaissance findings:
-Reconnaissance Results: {{recon_results?}}
+    instruction=f"""You are a forensic analysis agent. Your job is to review the security indicator and perform artifact forensic inspection.
 
-If the security indicator or the findings involve an email artifact (.eml file), you have access to the `phishing_forensics` tool. Use it by passing the raw email body/headers/contents to perform a detailed phishing forensic analysis.
+If the security indicator or findings involve an email artifact (.eml file), you have access to the `phishing_forensics` tool. Use it by passing the raw email body/headers/contents to perform a detailed phishing forensic analysis.
 If the indicator or findings involve other artifacts (such as file hashes or payloads), perform a detailed forensic analysis of that artifact (e.g., behavior, capabilities).
 If no artifact forensic analysis is required, explicitly state: "No artifact forensic analysis is required for this indicator."
 Output your forensic findings clearly.
@@ -106,7 +114,17 @@ Verify all findings according to the following project rule:
     tools=[mcp_toolset]
 )
 
-# 4. report_agent: writes a structured SOC triage report from what the first two found
+# ParallelAgent: Runs recon_agent and analysis_agent concurrently
+parallel_triage_agent = ParallelAgent(
+    name="parallel_triage_agent",
+    sub_agents=[recon_agent, analysis_agent]
+)
+
+# ─────────────────────────────────────────────────────────────
+# PHASE 2: Sequential Synthesis
+# report_agent ingests aggregated context from parallel triage
+# and synthesizes a final SOC ticket note for Tier 2 escalation.
+# ─────────────────────────────────────────────────────────────
 report_agent = LlmAgent(
     name="report_agent",
     model=gemini_model,
@@ -127,8 +145,19 @@ After generating the report, use the `save_report` tool to save it to disk. Pass
     tools=[mcp_toolset]
 )
 
-# 4. Sequential Orchestration Pipeline (Eliminates TaskGroup Async Errors)
+# ─────────────────────────────────────────────────────────────
+# ROOT AGENT: Hybrid Parallel-then-Sequential Pipeline
+#
+# Architecture:
+#   validator_agent (Sequential: Phase 0 - Pre-triage)
+#       ↓
+#   parallel_triage_agent (Parallel: Phase 1 - Concurrent OSINT + Forensics)
+#       ├── recon_agent
+#       └── analysis_agent
+#       ↓
+#   report_agent (Sequential: Phase 2 - Synthesis & Reporting)
+# ─────────────────────────────────────────────────────────────
 root_agent = SequentialAgent(
     name="root_agent",
-    sub_agents=[validator_agent, recon_agent, analysis_agent, report_agent]
+    sub_agents=[validator_agent, parallel_triage_agent, report_agent]
 )
