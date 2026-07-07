@@ -36,18 +36,6 @@ try:
 except Exception as e:
     rule_content = f"Error loading AGENTS.md: {e}"
 
-# Create the MCP toolset running our custom FastMCP server with a 120-second read timeout
-mcp_toolset = McpToolset(
-    connection_params=StdioConnectionParams(
-        server_params=StdioServerParameters(
-            command=sys.executable,
-            args=[mcp_server_path],
-            env=os.environ.copy()
-        ),
-        timeout=120.0  # Set read/connection timeout to 120 seconds
-    )
-)
-
 def create_agent(api_key: str, model_name: str) -> SequentialAgent:
     """
     Factory function to create a new agent pipeline with the specified API key and model.
@@ -55,6 +43,19 @@ def create_agent(api_key: str, model_name: str) -> SequentialAgent:
     """
     # Set the API key in the environment so the underlying GenAI client picks it up
     os.environ["GEMINI_API_KEY"] = api_key
+    
+    # Create the MCP toolset running our custom FastMCP server with a 120-second read timeout
+    # Instantiated inside the function so it is bound to the active asyncio event loop
+    mcp_toolset = McpToolset(
+        connection_params=StdioConnectionParams(
+            server_params=StdioServerParameters(
+                command=sys.executable,
+                args=[mcp_server_path],
+                env=os.environ.copy()
+            ),
+            timeout=120.0  # Set read/connection timeout to 120 seconds
+        )
+    )
     
     # Define model with exponential backoff retry to mitigate 429 rate limit errors
     gemini_model = Gemini(
