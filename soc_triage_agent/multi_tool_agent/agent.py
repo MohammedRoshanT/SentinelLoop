@@ -13,6 +13,41 @@ load_dotenv()
 from google.adk.models import Gemini
 from google.genai.types import HttpRetryOptions
 
+
+# Dynamically resolve python interpreter path and mcp_server.py path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+mcp_server_path = os.path.join(os.path.dirname(current_dir), "mcp_server.py")
+
+# Dynamically resolve path to workspace rules and skills
+workspace_root = os.path.dirname(os.path.dirname(current_dir))
+skill_path = os.path.join(workspace_root, ".agents", "skills", "soc-triage-reporting", "SKILL.md")
+rule_path = os.path.join(workspace_root, ".agents", "AGENTS.md")
+
+# Load skill and rule files
+try:
+    with open(skill_path, "r", encoding="utf-8") as f:
+        skill_content = f.read()
+except Exception as e:
+    skill_content = f"Error loading SKILL.md: {e}"
+
+try:
+    with open(rule_path, "r", encoding="utf-8") as f:
+        rule_content = f.read()
+except Exception as e:
+    rule_content = f"Error loading AGENTS.md: {e}"
+
+# Create the MCP toolset running our custom FastMCP server with a 120-second read timeout
+mcp_toolset = McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command=sys.executable,
+            args=[mcp_server_path],
+            env=os.environ.copy()
+        ),
+        timeout=120.0  # Set read/connection timeout to 120 seconds
+    )
+)
+
 def create_agent(api_key: str, model_name: str) -> SequentialAgent:
     """
     Factory function to create a new agent pipeline with the specified API key and model.
