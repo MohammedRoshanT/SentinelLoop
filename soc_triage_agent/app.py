@@ -103,7 +103,7 @@ with st.sidebar:
     model_choice = st.selectbox(
         "Select Model",
         options=["gemini-3.5-flash", "gemini-3.1-pro", "gemini-2.5-flash", "gemini-2.0-flash"],
-        index=0
+        index=1  # Default to 3.1-pro to avoid free tier limits on 3.5-flash
     )
     
     st.markdown("---")
