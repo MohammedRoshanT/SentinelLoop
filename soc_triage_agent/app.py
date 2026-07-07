@@ -150,14 +150,24 @@ if prompt := st.chat_input("Enter a security indicator (IP, domain, hash, email)
     with st.chat_message("assistant"):
         with st.spinner(f"Agents are analyzing indicator using {model_choice}..."):
             try:
-                # Run the agent pipeline
-                response = agent.run(prompt)
+                # Run the agent pipeline using InMemoryRunner
+                import asyncio
+                from google.adk.runners import InMemoryRunner
+                
+                runner = InMemoryRunner(agent=agent)
+                events = asyncio.run(runner.run_debug(prompt, quiet=True))
+                
+                # Extract the final output from the last event that has output data
+                final_text = ""
+                for ev in events:
+                    if hasattr(ev, 'data') and ev.data and hasattr(ev.data, 'output'):
+                        final_text = ev.data.output
                 
                 # Check if response is a dict and try to extract the final report
-                if isinstance(response, dict) and "soc_report" in response:
-                    final_text = response["soc_report"]
+                if isinstance(final_text, dict) and "soc_report" in final_text:
+                    final_text = final_text["soc_report"]
                 else:
-                    final_text = str(response)
+                    final_text = str(final_text)
                     
                 st.markdown(final_text)
                 st.session_state.messages.append({"role": "assistant", "content": final_text})
